@@ -47,6 +47,27 @@ process fastp {
   """
 }
 
+process kraken2 {
+
+    tag { sample_id }
+    
+    publishDir params.versioned_outdir ? "${params.outdir}/${sample_id}/${params.pipeline_short_name}-v${params.pipeline_minor_version}-output" : "${params.outdir}", mode: 'copy', pattern: "${sample_id}_kraken*{fq, txt, kraken, krona}"
+
+    input:
+    tuple val(sample_id), path(reads_1), path(reads_2), path(kraken2_db)
+
+    output:
+    tuple val(sample_id), path("${sample_id}_kraken_report.txt"), emit: reports
+    tuple val(sample_id), path("${sample_id}_kraken.krona"), emit: krona
+    tuple val(sample_id), path("${sample_id}_kraken_1.fq"), path("${sample_id}_kraken2_2.fq"), emit: classifiedReads
+    
+    script:
+    """
+    kraken2 -db ${kraken2_db} --report ${sample_id}_kraken_report.txt -paired --classified-out ${sample_id}_kraken#.fq -1 ${reads_1} -2 ${reads_2} > ${sample_id}_kraken.kraken
+    cat ${sample_id}_kraken.kraken | cut -f 2,3 > ${sample_id}_kraken.krona
+    #ktImportTaxonomy ${sample_id}_kraken.krona
+    """
+}
 
 process tbprofiler {
 
