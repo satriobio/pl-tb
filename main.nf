@@ -7,6 +7,7 @@ nextflow.enable.dsl = 2
 include { fastqc }                  from './modules/tbprofiler.nf'
 include { fastp }                   from './modules/tbprofiler.nf'
 include { kraken2 }                 from './modules/tbprofiler.nf'
+include { krona }		    from './modules/tbprofiler.nf'
 include { tbprofiler }              from './modules/tbprofiler.nf'
 include { rename_ref_in_alignment } from './modules/tbprofiler.nf'
 include { rename_ref_in_variants as rename_ref_in_targets_variants }       from './modules/tbprofiler.nf'
@@ -36,7 +37,9 @@ workflow {
 
     fastp(ch_fastq)
     
-    kraken2(fastp.out.reads)
+    kraken2(fastp.out.reads, params.kraken2_db)
+    
+    krona(kraken2.out.kraken, params.krona_db)
 
     tbprofiler(fastp.out.reads)
 
